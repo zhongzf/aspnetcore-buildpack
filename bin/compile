@@ -1,0 +1,27 @@
+#!/usr/bin/env bash
+# bin/compile <build-dir> <cache-dir>
+
+# fail fast
+set -e
+
+if [ $STACK != "cedar-14" ]; then
+	echo "Stack ${STACK} not supported" && exit 1
+fi
+
+BUILD_DIR=$1
+CACHE_DIR=$2
+ENV_DIR=$3
+BUILDPACK_DIR=`cd $(dirname $0); cd ..; pwd`
+
+# Move the deployed files
+(
+	shopt -s dotglob
+	mv ${BUILD_DIR}/* ${HOME}
+)
+
+# Install .NET Core SDK 
+mkdir -p "${BUILD_DIR}/dotnet"
+curl https://go.microsoft.com/fwlink/?LinkID=834989 -Ls | tar xz -C ${BUILD_DIR}/dotnet
+ln -s ${BUILD_DIR}/dotnet ${HOME}
+export PATH="${HOME}/dotnet:${PATH}"
+dotnet --version
