@@ -29,4 +29,8 @@ mkdir -p "${BUILD_DIR}/dotnet"
 curl https://go.microsoft.com/fwlink/?LinkID=834989 -Ls | tar xz -C ${BUILD_DIR}/dotnet
 ln -s ${BUILD_DIR}/dotnet ${HOME}
 export PATH="${HOME}/dotnet:${PATH}"
+echo ".NET Core SDK Version"
 dotnet --version
+
+# Copy Procfile
+cp ${HOME}/Procfile ${BUILD_DIR}
