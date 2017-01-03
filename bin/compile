@@ -32,5 +32,9 @@ export PATH="${HOME}/dotnet:${PATH}"
 echo ".NET Core SDK Version"
 dotnet --version
 
+# Copy profile.d
+mkdir -p ${BUILD_DIR}/.profile.d
+cp -n ${BUILDPACK_DIR}/.profile.d/* ${BUILD_DIR}/.profile.d/
+
 # Copy Procfile
 cp ${HOME}/Procfile ${BUILD_DIR}
