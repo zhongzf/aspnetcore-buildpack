@@ -13,11 +13,16 @@ CACHE_DIR=$2
 ENV_DIR=$3
 BUILDPACK_DIR=`cd $(dirname $0); cd ..; pwd`
 
+source $BUILDPACK_DIR/bin/util
+
 # Move the deployed files
 (
 	shopt -s dotglob
 	mv ${BUILD_DIR}/* ${HOME}
 )
+
+echo "Installing the dependencies"
+apt_install libunwind8 gettext
 
 # Install .NET Core SDK 
 mkdir -p "${BUILD_DIR}/dotnet"
