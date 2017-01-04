@@ -15,6 +15,8 @@ BUILDPACK_DIR=`cd $(dirname $0); cd ..; pwd`
 
 source $BUILDPACK_DIR/bin/util
 
+: ${NODE_VERSION:="6.9.3"}
+
 echo "Installing the dependencies"
 apt_install libunwind8 gettext
 
@@ -74,9 +76,15 @@ echo $CORE_ENVIRONMENT
 if [ -n ${PROJECT_JSON_FILE} ]; then
 	if [ -n "$(find ${BUILD_DIR} -maxdepth 3 -iname 'bower.json')" ]
 	then
+		echo "Installing Node"
+		NODE_PATH=`mktemp -d`
+		curl https://nodejs.org/dist/v${NODE_VERSION}/node-v${NODE_VERSION}-linux-x64.tar.xz -Ls | tar xz -C ${NODE_PATH}
+		export PATH="${NODE_PATH}/node-v${NODE_VERSION}-linux-x64/bin:${PATH}"
+		echo "node version: "
+		node -v
 		echo "Installing bower"
 		if ! hash bower 2>/dev/null; then
-			apt_install nodejs npm
+#			apt_install nodejs npm
 			npm install -g bower
 		fi
 	fi
