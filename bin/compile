@@ -76,7 +76,7 @@ if [ -n ${PROJECT_JSON_FILE} ]; then
 	then
 		echo "Installing bower"
 		if ! hash bower 2>/dev/null; then
-			npm install -g bower
+# TODO: 	npm install -g bower
 		fi
 	fi
 
