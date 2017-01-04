@@ -18,13 +18,23 @@ source $BUILDPACK_DIR/bin/util
 echo "Installing the dependencies"
 apt_install libunwind8 gettext
 
-# Get .NET Core runtime version
+# Get .NET Core runtime framework version
 RUNTIME_CONFIG=`find ${BUILD_DIR} -type f -name '*.runtimeconfig.json'`
 echo $RUNTIME_CONFIG
+RUNTIME_FRAMEWORK_VERSION=$(ruby -rjson -e "j = JSON.parse(File.open('${RUNTIME_CONFIG}','r:bom|utf-8').read); unless j['runtimeOptions'].nil? ; puts j['runtimeOptions']['framework']['version'];end")
+echo $RUNTIME_FRAMEWORK_VERSION
+
+# Choose different download url
+DOTNET_CORE_DOWNLOAD_URL_1_0_3='https://go.microsoft.com/fwlink/?LinkID=836289'
+DOTNET_CORE_DOWNLOAD_URL_1_1_0='https://go.microsoft.com/fwlink/?LinkID=834989'
+case ${RUNTIME_FRAMEWORK_VERSION} in 
+	'1.0.3') DOTNET_CORE_DOWNLOAD_URL=DOTNET_CORE_DOWNLOAD_URL_1_0_3;;
+	*) DOTNET_CORE_DOWNLOAD_URL=DOTNET_CORE_DOWNLOAD_URL_1_1_0;;
+esac
 
 # Install .NET Core SDK 
 mkdir -p "${BUILD_DIR}/dotnet"
-curl https://go.microsoft.com/fwlink/?LinkID=834989 -Ls | tar xz -C ${BUILD_DIR}/dotnet
+curl ${DOTNET_CORE_DOWNLOAD_URL} -Ls | tar xz -C ${BUILD_DIR}/dotnet
 ln -s ${BUILD_DIR}/dotnet ${HOME}
 export PATH="${HOME}/dotnet:${PATH}"
 echo ".NET Core SDK Version"
