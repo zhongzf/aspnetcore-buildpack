@@ -3,6 +3,8 @@
 
 if [ -n "$( find $1 -maxdepth 3 -iname web.config )" ]; then
   echo "ASP.NET Core" && exit 0
+elif [ -n "$( find $1 -maxdepth 3 -iname project.json )" ]; then
+  echo "ASP.NET Core" && exit 0
 else
   echo "no" && exit 1
 fi
