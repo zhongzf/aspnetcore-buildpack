@@ -29,6 +29,7 @@ if [ -n "$PROJECT" ]; then
 	fi
 	RUNTIME_FRAMEWORK_VERSION=$(ruby -rjson -e "j = JSON.parse(File.open('${PROJECT_JSON_FILE}','r:bom|utf-8').read); unless j['dependencies'].nil? ; puts j['dependencies']['Microsoft.NETCore.App']['version'];end")
 elif [ -n ${PROJECT_JSON_FILES} ]; then
+	echo "Project file configured from project.json"
 	PROJECT_JSON_FILE=$(echo "$PROJECT_JSON_FILES" | head -1)
 	RUNTIME_FRAMEWORK_VERSION=$(ruby -rjson -e "j = JSON.parse(File.open('${PROJECT_JSON_FILE}','r:bom|utf-8').read); unless j['dependencies'].nil? ; puts j['dependencies']['Microsoft.NETCore.App']['version'];end")
 else
@@ -67,6 +68,9 @@ else
 	CORE_CONFIGURATION="Release"
 	CORE_ENVIRONMENT=""
 fi
+echo $CORE_CONFIGURATION
+echo $CORE_ENVIRONMENT
+
 if [ -n ${PROJECT_JSON_FILE} ]; then
 	echo "Restoring the packages"
 	dotnet restore ${PROJECT_JSON_FILE}
@@ -81,20 +85,18 @@ if [ -n ${PROJECT_JSON_FILE} ]; then
 	dotnet publish ${PROJECT_JSON_FILE} --output ${BUILD_DIR}/bin --configuration ${CORE_CONFIGURATION}
 	echo "Publish Successed"
 
-# Copy or Create Procfile
 	echo $PROJECT_NAME
 	if [ ! -e ${BUILD_DIR}/Procfile ]; then
 		cat << EOT >> ${BUILD_DIR}/Procfile
-web: cd \${HOME}/bin && dotnet ./${PROJECT_NAME}.dll --server.urls http://+:\$PORT
+web: cd \${HOME}/bin && dotnet ./${PROJECT_NAME}.dll --server.urls http://+:\$PORT ${CORE_ENVIRONMENT}
 EOT
 	fi	
 else
-# Copy or Create Procfile
 	LAUNCH_ASSEMBLY_NAME=`basename ${RUNTIME_CONFIG} .runtimeconfig.json`
 	echo $LAUNCH_ASSEMBLY_NAME
 	if [ ! -e ${BUILD_DIR}/Procfile ]; then
 		cat << EOT >> ${BUILD_DIR}/Procfile
-web: dotnet ${LAUNCH_ASSEMBLY_NAME}.dll --server.urls http://+:\$PORT
+web: dotnet ${LAUNCH_ASSEMBLY_NAME}.dll --server.urls http://+:\$PORT ${CORE_ENVIRONMENT}
 EOT
 	fi
 fi
