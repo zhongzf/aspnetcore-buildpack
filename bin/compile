@@ -18,17 +18,31 @@ source $BUILDPACK_DIR/bin/util
 echo "Installing the dependencies"
 apt_install libunwind8 gettext
 
-# Get .NET Core runtime framework version
-RUNTIME_CONFIG=`find ${BUILD_DIR} -type f -name '*.runtimeconfig.json'`
-echo $RUNTIME_CONFIG
-RUNTIME_FRAMEWORK_VERSION=$(ruby -rjson -e "j = JSON.parse(File.open('${RUNTIME_CONFIG}','r:bom|utf-8').read); unless j['runtimeOptions'].nil? ; puts j['runtimeOptions']['framework']['version'];end")
+# Detect .NET Core runtime framework version
+RUNTIME_FRAMEWORK_VERSION='1.1.0'
+PROJECT_JSON_FILES=$(find ${BUILD_DIR} -maxdepth 3 -iname 'project.json')
+if [ -n "$PROJECT" ]; then
+	echo "Project file configured in PROJECT environment variable"
+	PROJECT_JSON_FILE=${BUILD_DIR}/${PROJECT}
+	if [[ -d $PROJECT_JSON_FILE ]]; then
+		PROJECT_JSON_FILE=${PROJECT_JSON_FILE}/project.json
+	fi
+	RUNTIME_FRAMEWORK_VERSION=$(ruby -rjson -e "j = JSON.parse(File.open('${PROJECT_JSON_FILE}','r:bom|utf-8').read); unless j['dependencies'].nil? ; puts j['dependencies']['Microsoft.NETCore.App']['version'];end")
+elif [ -n ${PROJECT_JSON_FILES} ]; then
+	PROJECT_JSON_FILE=$(echo "$PROJECT_JSON_FILES" | head -1)
+	RUNTIME_FRAMEWORK_VERSION=$(ruby -rjson -e "j = JSON.parse(File.open('${PROJECT_JSON_FILE}','r:bom|utf-8').read); unless j['dependencies'].nil? ; puts j['dependencies']['Microsoft.NETCore.App']['version'];end")
+else
+	RUNTIME_CONFIG=`find ${BUILD_DIR} -type f -name '*.runtimeconfig.json'`
+	echo $RUNTIME_CONFIG
+	RUNTIME_FRAMEWORK_VERSION=$(ruby -rjson -e "j = JSON.parse(File.open('${RUNTIME_CONFIG}','r:bom|utf-8').read); unless j['runtimeOptions'].nil? ; puts j['runtimeOptions']['framework']['version'];end")
+fi
 echo $RUNTIME_FRAMEWORK_VERSION
 
 # Choose different download url
 DOTNET_CORE_DOWNLOAD_URL_1_0_3='https://go.microsoft.com/fwlink/?LinkID=836289'
 DOTNET_CORE_DOWNLOAD_URL_1_1_0='https://go.microsoft.com/fwlink/?LinkID=834989'
 case $RUNTIME_FRAMEWORK_VERSION in 
-	"1.0.1"|"1.0.3") DOTNET_CORE_DOWNLOAD_URL=${DOTNET_CORE_DOWNLOAD_URL_1_0_3} ;;
+	"1.0.0"|"1.0.1"|"1.0.3") DOTNET_CORE_DOWNLOAD_URL=${DOTNET_CORE_DOWNLOAD_URL_1_0_3} ;;
 	"1.1.0") DOTNET_CORE_DOWNLOAD_URL=${DOTNET_CORE_DOWNLOAD_URL_1_1_0} ;;
 	*) DOTNET_CORE_DOWNLOAD_URL=${DOTNET_CORE_DOWNLOAD_URL_1_1_0} ;;
 esac
@@ -45,12 +59,43 @@ dotnet --version
 mkdir -p ${BUILD_DIR}/.profile.d
 cp -n ${BUILDPACK_DIR}/.profile.d/* ${BUILD_DIR}/.profile.d/
 
+# Compile source code or run deployed bin
+if [ -n "$BUILD_DEBUG" ]; then
+	CORE_CONFIGURATION="Debug"
+	CORE_ENVIRONMENT="--environment Development"
+else
+	CORE_CONFIGURATION="Release"
+	CORE_ENVIRONMENT=""
+fi
+if [ -n ${PROJECT_JSON_FILE} ]; then
+	echo "Restoring the packages"
+	dotnet restore ${PROJECT_JSON_FILE}
+
+	echo "Reading App Name from project.json"
+	PROJECT_DIR=$(dirname $PROJECT_JSON_FILE)
+	PROJECT_DIR_NAME=$(basename $PROJECT_DIR)
+	PROJECT_NAME=$(ruby -rjson -e "j = JSON.parse(File.open('${PROJECT_JSON_FILE}','r:bom|utf-8').read); unless j['buildOptions'].nil? ; puts j['buildOptions']['outputName'];end")
+	echo "${PROJECT_NAME:=$PROJECT_DIR_NAME}"
+
+	echo "Publishing the app"
+	dotnet publish ${PROJECT_JSON_FILE} --output ${BUILD_DIR}/bin --configuration ${CORE_CONFIGURATION}
+	echo "Publish Successed"
+
 # Copy or Create Procfile
-LAUNCH_ASSEMBLY_NAME=`basename ${RUNTIME_CONFIG} .runtimeconfig.json`
-echo $LAUNCH_ASSEMBLY_NAME
-if [ ! -e ${BUILD_DIR}/Procfile ]; then
-	cat << EOT >> ${BUILD_DIR}/Procfile
+	echo $PROJECT_NAME
+	if [ ! -e ${BUILD_DIR}/Procfile ]; then
+		cat << EOT >> ${BUILD_DIR}/Procfile
+web: cd \${HOME}/bin && dotnet ./${PROJECT_NAME}.dll --server.urls http://+:\$PORT
+EOT
+	fi	
+else
+# Copy or Create Procfile
+	LAUNCH_ASSEMBLY_NAME=`basename ${RUNTIME_CONFIG} .runtimeconfig.json`
+	echo $LAUNCH_ASSEMBLY_NAME
+	if [ ! -e ${BUILD_DIR}/Procfile ]; then
+		cat << EOT >> ${BUILD_DIR}/Procfile
 web: dotnet ${LAUNCH_ASSEMBLY_NAME}.dll --server.urls http://+:\$PORT
 EOT
+	fi
 fi
 cat ${BUILD_DIR}/Procfile
