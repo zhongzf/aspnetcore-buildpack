@@ -72,7 +72,7 @@ echo $CORE_CONFIGURATION
 echo $CORE_ENVIRONMENT
 
 if [ -n ${PROJECT_JSON_FILE} ]; then
-	if [[ -n $(find . -type f -iname package.json -o -iname bower.json) ]]
+	if [ -n "$(find ${BUILD_DIR} -maxdepth 3 -iname 'bower.json')" ]
 	then
 		echo "Installing bower"
 		if ! hash bower 2>/dev/null; then
