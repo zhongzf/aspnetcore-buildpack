@@ -76,8 +76,8 @@ if [ -n ${PROJECT_JSON_FILE} ]; then
 	then
 		echo "Installing bower"
 		if ! hash bower 2>/dev/null; then
-# TODO: 	npm install -g bower
-			echo 'npm install -g bower'
+			apt_install nodejs
+			npm install -g bower
 		fi
 	fi
 
