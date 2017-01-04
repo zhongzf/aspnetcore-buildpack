@@ -79,7 +79,8 @@ if [ -n ${PROJECT_JSON_FILE} ]; then
 		echo "Installing Node"
 		NODE_PATH=${BUILD_DIR}/node
 		mkdir -p "${NODE_PATH}"
-		curl https://nodejs.org/dist/v${NODE_VERSION}/node-v${NODE_VERSION}-linux-x64.tar.xz -Ls | tar xz -C ${NODE_PATH}
+		echo ${NODE_PATH}
+		curl "https://nodejs.org/dist/v${NODE_VERSION}/node-v${NODE_VERSION}-linux-x64.tar.xz" -Ls | tar xz -C ${NODE_PATH}
 		ln -s ${NODE_PATH} ${HOME}
 		export PATH="${HOME}/node/node-v${NODE_VERSION}-linux-x64/bin:${PATH}"
 		echo "node version: "
