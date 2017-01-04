@@ -15,12 +15,6 @@ BUILDPACK_DIR=`cd $(dirname $0); cd ..; pwd`
 
 source $BUILDPACK_DIR/bin/util
 
-# Move the deployed files
-(
-	shopt -s dotglob
-	mv ${BUILD_DIR}/* ${HOME}
-)
-
 echo "Installing the dependencies"
 apt_install libunwind8 gettext
 
@@ -35,6 +29,3 @@ dotnet --version
 # Copy profile.d
 mkdir -p ${BUILD_DIR}/.profile.d
 cp -n ${BUILDPACK_DIR}/.profile.d/* ${BUILD_DIR}/.profile.d/
-
-# Copy Procfile
-cp ${HOME}/Procfile ${BUILD_DIR}
