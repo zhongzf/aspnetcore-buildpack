@@ -35,9 +35,11 @@ mkdir -p ${BUILD_DIR}/.profile.d
 cp -n ${BUILDPACK_DIR}/.profile.d/* ${BUILD_DIR}/.profile.d/
 
 # Copy or Create Procfile
-LAUNCH_ASSEMBLY_NAME=`basename $RUNTIME_CONFIG .runtimeconfig.json`
+LAUNCH_ASSEMBLY_NAME=`basename ${RUNTIME_CONFIG} .runtimeconfig.json`
+echo $LAUNCH_ASSEMBLY_NAME
 if [ ! -e ${BUILD_DIR}/Procfile ]; then
 	cat << EOT >> ${BUILD_DIR}/Procfile
 web: dotnet ${LAUNCH_ASSEMBLY_NAME}.dll --server.urls http://+:\$PORT
 EOT
 fi
+cat ${BUILD_DIR}/Procfile
