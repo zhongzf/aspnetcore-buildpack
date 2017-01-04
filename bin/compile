@@ -18,6 +18,10 @@ source $BUILDPACK_DIR/bin/util
 echo "Installing the dependencies"
 apt_install libunwind8 gettext
 
+# Get .NET Core runtime version
+RUNTIME_CONFIG = $(find ${BUILD_DIR} -type f -name '*.runtimeconfig.json')
+echo $RUNTIME_CONFIG
+
 # Install .NET Core SDK 
 mkdir -p "${BUILD_DIR}/dotnet"
 curl https://go.microsoft.com/fwlink/?LinkID=834989 -Ls | tar xz -C ${BUILD_DIR}/dotnet
@@ -29,3 +33,11 @@ dotnet --version
 # Copy profile.d
 mkdir -p ${BUILD_DIR}/.profile.d
 cp -n ${BUILDPACK_DIR}/.profile.d/* ${BUILD_DIR}/.profile.d/
+
+# Copy or Create Procfile
+LAUNCH_ASSEMBLY_NAME = $(basename $RUNTIME_CONFIG .runtimeconfig.json)
+if [ ! -e ${BUILD_DIR}/Procfile ]; then
+	cat << EOT >> ${BUILD_DIR}/Procfile
+web: dotnet ${LAUNCH_ASSEMBLY_NAME}.dll --server.urls http://+:\$PORT
+EOT
+fi
