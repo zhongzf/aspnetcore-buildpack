@@ -72,6 +72,14 @@ echo $CORE_CONFIGURATION
 echo $CORE_ENVIRONMENT
 
 if [ -n ${PROJECT_JSON_FILE} ]; then
+	if [[ -n $(find . -type f -iname package.json -o -iname bower.json) ]]
+	then
+		echo "Installing bower"
+		if ! hash bower 2>/dev/null; then
+			npm install -g bower
+		fi
+	fi
+
 	echo "Restoring the packages"
 	dotnet restore ${PROJECT_JSON_FILE}
 
