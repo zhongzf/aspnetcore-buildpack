@@ -30,7 +30,7 @@ if [ -n "$PROJECT" ]; then
 		PROJECT_JSON_FILE=${PROJECT_JSON_FILE}/project.json
 	fi
 	RUNTIME_FRAMEWORK_VERSION=$(ruby -rjson -e "j = JSON.parse(File.open('${PROJECT_JSON_FILE}','r:bom|utf-8').read); unless j['dependencies'].nil? ; puts j['dependencies']['Microsoft.NETCore.App']['version'];end")
-elif [ -n ${PROJECT_JSON_FILES} ]; then
+elif [ -n "$PROJECT_JSON_FILES" ]; then
 	echo "Project file configured from project.json"
 	PROJECT_JSON_FILE=$(echo "$PROJECT_JSON_FILES" | head -1)
 	RUNTIME_FRAMEWORK_VERSION=$(ruby -rjson -e "j = JSON.parse(File.open('${PROJECT_JSON_FILE}','r:bom|utf-8').read); unless j['dependencies'].nil? ; puts j['dependencies']['Microsoft.NETCore.App']['version'];end")
@@ -73,7 +73,7 @@ fi
 echo $CORE_CONFIGURATION
 echo $CORE_ENVIRONMENT
 
-if [ -n ${PROJECT_JSON_FILE} ]; then
+if [ -n "$PROJECT_JSON_FILE" ]; then
 	if [ -n "$(find ${BUILD_DIR} -maxdepth 3 -iname 'bower.json')" ]
 	then
 		echo "Installing Node"
