@@ -16,12 +16,12 @@ BUILDPACK_DIR=`cd $(dirname $0); cd ..; pwd`
 source $BUILDPACK_DIR/bin/util
 
 : ${NODE_VERSION:="6.9.3"}
+: ${RUNTIME_FRAMEWORK_VERSION:="1.1.0"}
 
 echo "Installing the dependencies"
 apt_install libunwind8 gettext
 
 # Detect .NET Core runtime framework version
-RUNTIME_FRAMEWORK_VERSION='1.1.0'
 PROJECT_JSON_FILES=$(find ${BUILD_DIR} -maxdepth 3 -iname 'project.json')
 if [ -n "$PROJECT" ]; then
 	echo "Project file configured in PROJECT environment variable"
